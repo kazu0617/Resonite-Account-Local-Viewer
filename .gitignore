@@ -1,0 +1,26 @@
+# From ResoniteDownloader
+ResoniteDownload/
+Assets/
+U-*/
+G-*/
+
+# Cached
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+_index.csv
+ResonitePhotos/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
