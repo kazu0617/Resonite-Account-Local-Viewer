@@ -1,0 +1,68 @@
+# resonite_viewer.py を Nuitka で Windows 向け exe (standalone フォルダ) にビルドする。
+# 手動実行 (Actions タブの Run workflow) か、v* タグの push で動く。
+# 成果物は Actions の Artifacts から zip でダウンロードできる。
+name: Build Windows exe
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12.10"
+
+      - name: Install Nuitka
+        run: python -m pip install --require-hashes -r build/requirements-windows.txt
+
+      - name: Decide version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = "0.0.0"
+          if ("${{ github.ref_type }}" -eq "tag") { $v = "${{ github.ref_name }}".TrimStart("v") }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        run: >
+          python -m nuitka resonite_viewer.py
+          --standalone
+          --msvc=latest
+          --output-dir=out
+          --output-filename=ResoniteViewer.exe
+          --windows-console-mode=force
+          --company-name=kazu0617
+          --product-name="Resonite Export Viewer"
+          --file-description="Resonite Export Viewer"
+          --file-version=${{ steps.ver.outputs.version }}.0
+          --product-version=${{ steps.ver.outputs.version }}.0
+          --copyright="Copyright (C) 2026 kazu0617 / 0BSD"
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "ResoniteViewer-${{ steps.ver.outputs.version }}-win64"
+          Rename-Item out/resonite_viewer.dist $name
+          Copy-Item LICENSE, build/README-Windows.txt "out/$name/"
+          Compress-Archive -Path "out/$name" -DestinationPath "out/$name.zip"
+          (Get-FileHash "out/$name.zip" -Algorithm SHA256).Hash.ToLower() + "  $name.zip" | Out-File -Encoding ascii "out/$name.zip.sha256"
+          Get-Content "out/$name.zip.sha256"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ResoniteViewer-win64
+          path: |
+            out/*.zip
+            out/*.zip.sha256
+          if-no-files-found: error

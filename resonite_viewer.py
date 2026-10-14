@@ -366,13 +366,28 @@ class Handler(BaseHTTPRequestHandler):
                 remain -= len(chunk)
 
 
+def app_dir():
+    """スクリプト、または exe としてビルドした場合は exe のあるディレクトリ。"""
+    return os.path.dirname(os.path.abspath(sys.argv[0]))
+
+
 def find_export_dir(arg):
     cands = [arg] if arg else [os.getcwd(), os.path.join(os.getcwd(), "ResoniteDownload"),
-                               os.path.join(os.path.dirname(os.path.abspath(__file__)), "ResoniteDownload")]
+                               app_dir(), os.path.join(app_dir(), "ResoniteDownload")]
     for c in cands:
         if c and os.path.isdir(c) and any(OWNER_RE.match(d) for d in os.listdir(c)):
             return os.path.abspath(c)
     return None
+
+
+def fail(msg):
+    print(msg, file=sys.stderr)
+    if "__compiled__" in globals():  # exe をダブルクリックした場合にウィンドウがすぐ閉じないようにする
+        try:
+            input("Enter キーで終了します / Press Enter to exit")
+        except EOFError:
+            pass
+    sys.exit(1)
 
 
 def main():
@@ -389,7 +404,10 @@ def main():
 
     root = find_export_dir(a.export_dir)
     if not root:
-        sys.exit("Export directory not found (expects a folder containing U-xxx/ and Assets/).")
+        fail("ダウンロードデータのフォルダが見つかりません。\n"
+             "U-xxx/ と Assets/ を含むフォルダ (例: ResoniteDownload) を指定してください。\n"
+             "Windows では、そのフォルダを ResoniteViewer.exe にドラッグ&ドロップするか、exe と同じ場所に置いてください。\n"
+             "Export directory not found (expects a folder containing U-xxx/ and Assets/).")
     Handler.store = Store(root)
     print(f"export: {root}  owners: {', '.join(Handler.store.owners)}  assets: {len(Handler.store.assets)}")
 
@@ -401,9 +419,9 @@ def main():
         except OSError:
             continue
     if not httpd:
-        sys.exit("No free port found.")
+        fail("No free port found.")
     url = f"http://127.0.0.1:{httpd.server_address[1]}/"
-    print(f"open {url}  (Ctrl+C to stop)")
+    print(f"open {url}  (Ctrl+C or close this window to stop)")
     threading.Thread(target=Handler.store.owner, args=(Handler.store.owners[0],), daemon=True).start()
     if not a.no_browser:
         threading.Timer(0.5, webbrowser.open, args=(url,)).start()

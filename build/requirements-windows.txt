@@ -1,0 +1,3 @@
+# Windows exe のビルド用 (GitHub Actions)。pip install --require-hashes -r で使う
+nuitka==4.2.2 \
+    --hash=sha256:29c1bfb6f53154e620b38cf6167cbb03f54043f6e08ef7d3f2d5080a95df7e0d
