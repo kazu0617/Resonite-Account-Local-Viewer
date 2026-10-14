@@ -1,6 +1,6 @@
-# Resonite Account Export Tools
+# Resonite Account Local Viewer
 
-[Resonite Account Downloader](https://github.com/Yellow-Dog-Man/ResoniteAccountDownloader) でダウンロードしたアカウントデータを閲覧・整理するためのツール。
+[Resonite Account Downloader](https://github.com/Yellow-Dog-Man/ResoniteAccountDownloader) でダウンロードしたアカウントデータをローカルで閲覧・整理するためのツール。
 
 - **resonite_viewer.py** - ダウンロードしたデータ全体 (インベントリ・写真・メッセージ・コンタクトなど) をブラウザで一覧できるローカルビューア
 - **rebuild_photos.py** - インベントリの写真フォルダ構造を、そのまま画像ファイルとして書き出すスクリプト
